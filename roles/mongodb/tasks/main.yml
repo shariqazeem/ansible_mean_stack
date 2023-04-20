@@ -1,0 +1,79 @@
+---
+# tasks file for mongodb
+- include_vars: secrets.yml
+- name: Import MongoDB public GPG key
+  apt_key:
+    url: https://www.mongodb.org/static/pgp/server-5.0.asc
+    state: present
+- name: Add MongoDB repository to sources list
+  apt_repository:
+    repo: deb [arch=amd64,arm64] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse
+    state: present
+
+- name: Install MongoDB packages
+  apt:
+    name:
+    - mongodb-org
+    state: present
+
+- name: Start and Enable the engine
+  service: 
+    name: mongod
+    state: started
+    enabled: yes
+
+- name: Allow for outside connections
+  lineinfile:
+    path: /etc/mongod.conf
+    regexp: '^#?bind_ip = 127.0.0.1'
+    line: '#bind_ip = 127.0.0.1'
+  notify:
+    - restart mongodb
+
+- name: Install pip3
+  apt:
+    name: python3-pip
+    state: present
+
+- name: Install Pymongo
+  pip:
+    name: pymongo
+    state: present
+- name: Disable Mongodb security
+  lineinfile:
+    path: /etc/mongod.conf
+    line: "security.authorization: disabled"
+  notify:
+    - restart mongodb
+- name: Check if the admin user is already created
+  command: grep "^auth = true" /etc/mongod.conf
+  register: auth
+  ignore_errors: yes
+- name: Create MongoDB user
+  community.mongodb.mongodb_user:
+    database: admin
+    name: root
+    password: "{{ dbpass }}"
+    roles: root
+    state: present
+  when: auth.rc == 1
+- name: enable auth
+  lineinfile:
+    path: /etc/mongod.conf
+    regexp: '#?auth \= true'
+    line: 'auth = true'
+  notify: restart mongodb
+- name: create the app user
+  community.mongodb.mongodb_user:
+    login_user: root
+    login_password: "{{dbpass}}"
+    name: "{{ appdbuser }}"
+    password: "{{ appdbpass }}"
+    database: "{{ dbname }}"
+    roles: dbOwner
+    state: present
+- name: stop firewall to allow outside connections
+  service:
+    name: ufw
+    state: stopped
+  
