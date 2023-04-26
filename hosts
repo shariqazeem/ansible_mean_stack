@@ -1,9 +1,9 @@
 [db]
-100.26.109.13 ansible_user=ubuntu ansible_ssh_private_key_file=centos-app-key.pem
+54.175.186.243 ansible_user=ubuntu ansible_ssh_private_key_file=centos-app-key.pem
 
 [web]
-3.89.59.154 ansible_user=centos ansible_ssh_private_key_file=centos-app-key.pem
+54.211.27.250 ansible_user=centos ansible_ssh_private_key_file=centos-app-key.pem
 
 [app]
-52.201.227.219 ansible_user=centos ansible_ssh_private_key_file=centos-app-key.pem
+54.146.137.48 ansible_user=centos ansible_ssh_private_key_file=centos-app-key.pem
 
